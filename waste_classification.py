@@ -1,6 +1,7 @@
 import torch
+from torch import nn
 from torch.utils.data import DataLoader, random_split
-from torchvision import datasets, transforms
+from torchvision import datasets, models, transforms
 
 
 def main() -> None:
@@ -42,6 +43,21 @@ def main() -> None:
     print("Classes:", full_dataset.classes)
     print("Train batches:", len(train_loader))
     print("Val batches:", len(val_loader))
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.DEFAULT)
+    for parameter in model.parameters():
+        parameter.requires_grad = False
+
+    num_classes = len(full_dataset.classes)
+    model.classifier = nn.Sequential(
+        nn.Dropout(p=0.5),
+        nn.Linear(model.last_channel, num_classes),
+    )
+    model = model.to(device)
+
+    print(model)
 
 
 if __name__ == "__main__":
